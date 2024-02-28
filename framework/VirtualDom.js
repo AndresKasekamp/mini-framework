@@ -1,10 +1,8 @@
 /**
- * Fastest way to remove element
- * Procudes a DOM mutation
- * @param  {Object} node the exact DOM node you want to empty the contents of.
+ * Fastest way to remove element, DOM mutation
+ * @param  {Element} node empyting the contents of the following DOM node
  * @example
- * // returns true (once the 'app' node is emptied)
- * const node = document.getElementById('app');
+ * const node = document.getElementById('app'); // selecting the node
  * clearNode(node);
  */
 function clearNode(node) {
@@ -17,13 +15,12 @@ function clearNode(node) {
  * Mount ROOT DOM element
  * @param {Object} model store of the application's state, e.g todo state
  * @param {Function} patch how the application state is updated/patched ("controller")
- * @param {Function} view function that renders HTML/DOM elements with model.
- * @param {String} rootDiv root DOM element in which the app is mounted
+ * @param {Function} view rendering with the model
+ * @param {HTMLElement} rootDiv root DOM element in which the app is mounted, e.g app
  * @param {Function} subscriptions any event listeners the application needs
  */
 export function mount(model, patch, view, rootDiv, subscriptions) {
-  const ROOT = document.getElementById(rootDiv); // root DOM element, in the example 'app'
-  const localStorageStore = "todo-app-mvc" + rootDiv; // 
+  const localStorageStore = "todo-app-mvc"; // 
 
   /**
    * Renders the view based on the provided model and signal.
@@ -32,10 +29,11 @@ export function mount(model, patch, view, rootDiv, subscriptions) {
    * @param {HTMLElement} root - The root DOM element where the view will be rendered.
    */
   function render(mod, sig, root) {
-    // DRY rendering code (invoked twice)
-    localStorage.setItem(localStorageStore, JSON.stringify(mod)); // save the model!
+    localStorage.setItem(localStorageStore, JSON.stringify(mod)); // saving the state of the model to local storage
     clearNode(root); // clear root element (container) before (re)rendering
-    root.appendChild(view(mod, sig)); // render view based on model & signal
+    // Rendering new view based on model and signal given
+    const newView = view(mod, sig)
+    root.appendChild(newView); 
   }
 
   /**
@@ -47,34 +45,33 @@ export function mount(model, patch, view, rootDiv, subscriptions) {
    */
   function signal(action, data, model) {
     // signal function takes action
-    return function callback() {
+    return () => {
       // and returns callback
       model = JSON.parse(localStorage.getItem(localStorageStore)); //|| model;
       const updatedModel = patch(action, model, data); // update model for action
-      render(updatedModel, signal, ROOT);
+      render(updatedModel, signal, rootDiv);
     };
   }
 
   model = JSON.parse(localStorage.getItem(localStorageStore)) || model;
-  render(model, signal, ROOT);
+  render(model, signal, rootDiv);
+  // Subscriptions handling
   if (subscriptions && typeof subscriptions === "function") {
     subscriptions(signal);
   }
 }
 
 /**
- * addProps applies the desired attribute(s) to the specified DOM node.
- * Note: this function is "impure" because it "mutates" the node.
- * @param {Array.<String>/<Function>} props list of attributes to be applied
- * to the node accepts both String and Function (for onclick handlers).
+ * addProps applies the desired attribute(s) to the specified DOM node, mutates DOM noode
+ * @param {Array.<String>/<Function>} props list of attributes to be applied (borh string and function are accepted)
  * @param {Object} node DOM node upon which attribute(s) should be applied
  * @example
- * // returns node with attributes applied
  * input = addProps(["type=checkbox", "id=todo1", "checked=true"], input);
  */
 function addProps(props, node) {
   if (props && Array.isArray(props) && props.length > 0) {
-    props.forEach(function (attr) {
+
+    props.forEach( (attr) => {
       // onclick and action handler
       if (typeof attr === "function") {
         node.onclick = attr;
@@ -149,9 +146,6 @@ function addChildNodes(childnodes, parent) {
  * @param {Array.<String>} proplist list of attributes to be applied to the node
  * @param {Array.<Object>} childnodes array of child DOM nodes.
  * @return {Object} returns the <section> DOM node with appended children
- * @example
- * // returns the parent node with the "children" appended
- * const div = createElement('div', ["class=todoapp"], [h1, input]);
  */
 export function createElement(type, proplist, childnodes) {
   return addChildNodes(
@@ -160,22 +154,6 @@ export function createElement(type, proplist, childnodes) {
   );
 }
 
-// TODO router on tehniliselt implementeerimata?
-/**
- * route sets the hash portion of the URL in a web browser.
- * @param {Object} model - the current state of the application.
- * @param {String} title - the title of the "page" being navigated to
- * @param {String} hash - the hash (URL) to be navigated to.
- * @return {Object} new_state - state with hash updated to the *new* hash.
- * @example
- * // returns the state object with updated hash value:
- */
-function router(model, title, hash) {
-  console.log("In router");
-  window.location.hash = hash;
-  const useState = JSON.parse(JSON.stringify(model)); // clone model
-  useState.hash = hash;
-  return useState;
-}
+
 
 

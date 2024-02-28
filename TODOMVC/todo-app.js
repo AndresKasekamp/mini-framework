@@ -15,18 +15,14 @@ import {
   ul,
 } from "../framework/bootstrapElements.js";
 
-export const initModel = {
-  todos: [],
-  hash: "#/",
-};
+import { Router } from "../framework/RouteManagement.js";
 
-// TODO see on mvc implemnetation update funktsionaalsuse kasutamisest
 /**
  * Updating model based on action
  * @param {String} action - the desired action to perform on the model.
  * @param {String} data - the data we want to "apply" to the item.
  * @param {Object} model - the App's (current) model (or "state").
- * @return {Object} new_model - the transformed model.
+ * @return {Object} useModel - the transformed model.
  */
 export function update(action, model, data) {
   const useModel = JSON.parse(JSON.stringify(model)); // "clone" the model
@@ -121,7 +117,7 @@ export function update(action, model, data) {
       });
       break;
     case "ROUTE":
-      useModel.hash = window.location.hash; // (window && window.location && window.location.hash) ? // : '#/';
+      useModel.hash = window.location.hash;
       break;
     default: // if action unrecognised or undefined,
       return model; // return model unmodified
@@ -348,14 +344,10 @@ function renderFooter(model, signal) {
 
 /**
  * `view` renders the entire Todo List App
- * which contains count of items to (still) to be done and a `<ul>` "menu"
- * with links to filter which todo items appear in the list view.
  * @param {Object} model - the App's (current) model (or "state").
- * @param {Function} singal - the Elm Architicture "dispacher" which will run
+ * @param {Function} signal - dispatcher
  * @return {Object} <section> DOM Tree which containing all other DOM elements.
  * @example
- * // returns <section class="todo-app"> DOM element with other DOM els nested:
- * var DOM = view(model);
  */
 export function view(model, signal) {
   return section(
@@ -393,31 +385,44 @@ export function subscriptions(signal) {
   const ENTER_KEY = "Enter"; // add a new todo item when [Enter] key is pressed
   const ESCAPE_KEY = "Escape"; // used for "escaping" when editing a Todo item
 
-  document.addEventListener("keyup", function handler(e) {
-    switch (e.key) {
+  document.addEventListener("keyup", function handleKeyPress(event) {
+    switch (event.key) {
       case ENTER_KEY:
-        const editing = document.getElementsByClassName("editing");
-        if (editing && editing.length > 0) {
-          signal("SAVE")(); // invoke singal inner callback
-        }
-
-        let newTodo = document.getElementById("new-todo");
-        if (newTodo.value.length > 0) {
-          signal("ADD")(); // invoke singal inner callback
-          newTodo.value = ""; // reset <input> so we can add another todo
-          document.getElementById("new-todo").focus();
-        }
+        handleEnterKey();
         break;
       case ESCAPE_KEY:
         signal("CANCEL")();
         break;
+      default:
+        break;
+    }
+
+    function handleEnterKey() {
+      const editing = document.getElementsByClassName("editing");
+      const newTodoInput = document.getElementById("new-todo");
+
+      if (editing && editing.length > 0) {
+        signal("SAVE")();
+      }
+
+      if (newTodoInput.value.trim().length > 0) {
+        signal("ADD")();
+        newTodoInput.value = "";
+        newTodoInput.focus();
+      }
     }
   });
 
+  const router = new Router({
+    "#/": () => signal("ROUTE")(),
+    "#/active": () => signal("ROUTE")(),
+    "#/completed": () => signal("ROUTE")(),
+    "*": () => console.error(`No route found for ${path}`),
+  });
+
+  router.navigate(window.location.hash);
   // Subsribing to route changes
-  window.onhashchange = function route() {
-    signal("ROUTE")();
-  };
+  // window.onhashchange = () => {
+  //   signal("ROUTE")();
+  // };
 }
-
-

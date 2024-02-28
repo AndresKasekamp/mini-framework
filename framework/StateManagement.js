@@ -1,5 +1,3 @@
-// TODO asendada
-
 
 export class State {
     constructor(initialState) {

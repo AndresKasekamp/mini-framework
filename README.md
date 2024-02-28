@@ -35,7 +35,7 @@ npm run dev
 
 ### 🌐 Online
 
-1. Go to website: https://andreskasekamp.github.io/todo-mvc/
+1. Go to [website](https://master--sprightly-churros-f27bdd.netlify.app/)
 
 
 ## 🧪 Testing the program

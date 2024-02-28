@@ -1,4 +1,4 @@
- import { createElement } from "./framework";
+ import { createElement } from "./VirtualDom";
  
  /**
    * section creates a <section> HTML element with attributes and childnodes

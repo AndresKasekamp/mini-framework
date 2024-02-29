@@ -24,15 +24,11 @@ export function h(tag, props, children) {
   };
 }
 
-// TODO ma teeksin erinevalt võrreldes sellega, funktsioonid paneksin eventmanageriga külge
-// TODO agas sisuliselt võib mõlemat proovida
-// KAS SEE HETK KUI MA LOON UUE ELEMENDI, LISAN MA TALLE EVENTMANAGERI KÜLGE?
-// ESIMESES RUNNIS ON CONTAINER ROOT CONTAINER
 // Mount a virtual node to the DOM
 export function mount(vnode, container) {
   // Create the element
   const el = document.createElement(vnode.tag);
-  vnode.el = el;
+  
 
   // Set properties & event listeners
   for (const key in vnode.props) {
@@ -43,7 +39,6 @@ export function mount(vnode, container) {
       // vnode.props[key] = function
       el.addEventListener(key.slice(2).toLowerCase(), vnode.props[key]);
     } else {
-      // Handle attributes
       el.setAttribute(key, vnode.props[key]);
     }
   }
@@ -57,8 +52,11 @@ export function mount(vnode, container) {
     });
   }
 
+  vnode.el = el;
+
   // Mount to the DOM
   container.appendChild(el);
+
 }
 
 // Unmount a virtual node from the DOM
@@ -66,9 +64,10 @@ export function unmount(vnode) {
   vnode.el.parentNode.removeChild(vnode.el);
 }
 
-// TODO proovi sellest koodist aru saada
 // Take 2 virtual nodes, compare & figure out what's the difference
 export function patch(n1, n2) {
+  console.log("Patch n1", n1);
+  console.log("Patch n2", n2);
   const el = (n2.el = n1.el);
 
   // Case where the nodes are of different tags
@@ -115,6 +114,7 @@ export function patch(n1, n2) {
         // Add the newly added children
         else if (c2.length > c1.length) {
           c2.slice(c1.length).forEach((child) => {
+              console.log("---", child, el)
             mount(child, el);
           });
         }

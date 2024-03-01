@@ -2,91 +2,315 @@ import { h, mount, patch } from "./framework_2/vdom-vue.js";
 
 import { State } from "./framework_2/StateManager.js";
 
+import { Router } from "./framework_2/RouteManagement.js";
+
+
+
+
+
+
+
+
+// TODO active, completed nupud css-is ja siis onclick vms ja ruuteri klass kommunikeerida
 
 const app = document.getElementById("app");
 
 // Initialize State manager
-const model = new State([]);
+const model = new State({
+  todos: [],
+  filter: 'all',
+});
 
-let mainApp = initView(model);
+const routes = { // routes and callback functions key-value pairs
+  "#/": () => {
+    console.log(model);
+  },
+  "#/active": () => {
+    console.log("active page");
+  },
+  "#/completed": () => {
+    console.log("completed page");
+  },
+  "*": () => {
+    console.log("foo");
+  },
+};
+
+const router = new Router(routes);
+
+
+let mainApp = render(model);
+
+
+function areAllValuesEqual(array, key) {
+  if (array.length === 0) {
+    return true; // If array is empty, return true
+  }
+
+  const firstValue = array[0][key]; // Get the value of the key from the first object
+
+  // Check if the value of the key in each object is equal to the first value
+  return array.every((obj) => obj[key] === firstValue);
+}
 
 // Function to add a new todo
-function addTodo(e) {
+const addTodo = (e) => {
   if (e.key === "Enter") {
-    console.log(e.target.value);
+    const { todos, filter } = model.state;
+
     const newTodo = {
       id: Math.random(),
       text: e.target.value.trim(),
       completed: false,
+      edit: false,
     };
     e.target.value = "";
 
     // Adding value to model
-    const currentState = model.state;
-    const newTodos = [...currentState, newTodo];
-    model.setState(newTodos);
-
+    // const currentState = model.state.todos;
+    // const currentFilter = model.state.filter
+    // const newTodos = {todos: [...currentState, newTodo], filter: currentFilter};
+    // model.setState(newTodos);
+    model.setState({ ...model.state, todos: [...todos, newTodo] })
+  } else if (e.key === "Escape") {
+    e.target.value = "";
   }
 }
 
-function removeTodo() {
-    console.log("I clicked on removal")
-    // Full removal try
-    const newTodos = [];
-    model.setState(newTodos);
+function removeTodo(id) {
+  // Filtering todos
+  const todoRemoved = model.state.todos.filter((item) => {
+    return item.id !== id;
+  });
+  const currentFilter = model.state.filter
+  const newTodos = {todos: todoRemoved, filter: currentFilter};
+  model.setState(newTodos);
 }
 
-model.setOnStateChange((newState) => {
-    console.log("Somethin happened with the state", newState)
-    const newVDOM = initView(model); // Generate new virtual DOM based on updated state
-    patch(mainApp, newVDOM); // Patch the new virtual DOM onto the existing one
-    mainApp = newVDOM; // Update mainApp reference to the new virtual DOM
+function toggleTodo(id) {
+  const newTodos = model.state.todos.map((item) => {
+    if (item.id === id) {
+      return {
+        ...item,
+        completed: !item.completed,
+      };
+    }
+    return item;
+  });
+  model.setState(newTodos);
+}
 
+const clearCompleted = () => {
+  const newTodos = model.state.todos.filter((item) => !item.completed);
+  model.setState(newTodos);
+};
+
+// Functions will modify the state of all todos
+function toggleAllTodos() {
+  if (areAllValuesEqual(model.state.todos, "completed")) {
+    const newTodos = model.state.todos.map((item) => {
+      return {
+        ...item,
+        completed: !item.completed,
+      };
+    });
+    model.setState(newTodos);
+  } else {
+    const newTodos = model.state.todos.map((item) => {
+      return {
+        ...item,
+        completed: true,
+      };
+    });
+    model.setState(newTodos);
+  }
+}
+
+function editTodos(todo) {
+  const newTodos = model.state.todos.map((item) => {
+    if (item.id === todo.id) {
+      return {
+        ...item,
+        edit: !item.edit,
+      };
+    }
+    return item;
+  });
+  model.setState(newTodos);
+}
+
+function updateTodo(e, todo) {
+  if (e.key === "Enter") {
+    let newTodos = model.state.todos.map((item) => {
+      if (item.id === todo.id) {
+        return {
+          ...item,
+          text: e.target.value.trim(),
+          edit: !item.edit,
+        };
+      }
+      return item;
+    });
+
+    // Filtering is use set the value empty string
+    newTodos = newTodos.filter((item) => {
+      if (item.id === todo.id && item.text === "") {
+        return false
+      }
+      return true
+    })
+
+    model.setState(newTodos);
+  } else if (e.key === "Escape") {
+    const newTodos = model.state.todos.map((item) => {
+      if (item.id === todo.id) {
+        return {
+          ...item,
+          text: todo.text,
+          edit: !item.edit,
+        };
+      }
+      return item;
+    });
+
+    model.setState(newTodos);
+  }
+}
+
+
+model.setOnStateChange(() => {
+  const newVDOM = render(model); // Generate new virtual DOM based on updated state
+  patch(mainApp, newVDOM); // Patch the new virtual DOM onto the existing one
+  mainApp = newVDOM; // Update mainApp reference to the new virtual DOM
 });
 
+function todoListItem(todo) {
+  let displayState;
+  let editInput = null;
+  if (todo.edit) {
+    displayState = "editing";
+    // Creating edit input
+    editInput = h(
+      "input",
+      {
+        value: todo.text,
+        class: "edit",
+        id: todo.id,
+        autofocus: true,
+        onkeydown: (e) => {
+          updateTodo(e, todo);
+        },
+        placeholder: todo.text,
+      },
+      []
+    );
+  } else {
+    displayState = todo.completed ? "completed" : "";
+  }
 
-
-function todoListItem(todoTxt) {
-  const destroyButton = h("label", { class: "destroy", onClick: () => {removeTodo()} }, []);
-  const todoLabel = h("label", {}, todoTxt);
-  const input3 = h("input", { class: "toggle", type: "checkbox" }, []);
+  const destroyButton = h(
+    "button",
+    {
+      class: "destroy",
+      onClick: () => {
+        removeTodo(todo.id);
+      },
+    },
+    []
+  );
+  const todoLabel = h(
+    "label",
+    {
+      ondblclick: () => {
+        editTodos(todo);
+      },
+    },
+    todo.text
+  );
+  const input3 = h(
+    "input",
+    {
+      class: "toggle",
+      type: "checkbox",
+      checked: todo.completed,
+      onClick: () => {
+        toggleTodo(todo.id);
+      },
+    },
+    []
+  );
   const div = h("div", { class: "view" }, [input3, todoLabel, destroyButton]);
-  const li = h("li", { "data-id": 1, id: 1 }, [div]);
+
+  let li;
+  if (editInput !== null) {
+    li = h("li", { "data-id": todo.id, id: todo.id, class: displayState }, [
+      div,
+      editInput,
+    ]);
+  } else {
+    li = h("li", { "data-id": todo.id, id: todo.id, class: displayState }, [
+      div,
+    ]);
+  }
 
   return li;
 }
 
-
-
 // Initializing starting view
-function initView(model) {
+function render(model) {
 
-  const todoItems = model.state.map(todo => todoListItem(todo.text))
+  // Check if route has changed
+  router.handleRouteChange()
 
-  console.log("Tod items", todoItems)
+  console.log("Model state", model.state)
+  const todoItems = model.state.todos.map((todo) => todoListItem(todo));
+
+  const displayState =
+  model.state.todos.length > 0 ? "display:block" : "display:none";
+
+  const itemsLeft = model.state.todos.filter((obj) => obj.completed === false);
+  const itemsComplete = model.state.todos.filter((obj) => obj.completed === true);
 
   // Footer block
-  const span2 = h("span", { id: "completed-count" }, "0");
+  const span2 = h(
+    "span",
+    { id: "completed-count" },
+    itemsComplete.length == 0 ? "" : `Clear completed [${itemsComplete.length}]`
+  );
   const button = h(
     "button",
-    { class: "clear-completed", style: "display:none" },
+    {
+      class: "clear-completed",
+      style: displayState,
+      onClick: () => {
+        clearCompleted();
+      },
+    },
     [span2]
   );
 
-  const completedList = h("a", { href: "#/" }, "Completed");
-  const activeList = h("a", { href: "#/active" }, "Active");
-  const allList = h("a", { href: "#/completed" }, "All");
+  const completedList = h(
+    "a",
+    { href: "#/completed", id: "completed" },
+    "Completed"
+  );
+  const activeList = h("a", { href: "#/active", id: "active", onClick: () => {router._navigateTo("#/active")} }, "Active");
+  const allList = h("a", { href: "#/", id: "all", class: "selected" }, "All");
 
-  const ul2 = h("ul", { class: "filters" }, [
-    completedList,
-    activeList,
-    allList,
-  ]);
-  const strong = h("strong", {}, "0 items left"); // TODO see on muutuja mudelist probs
-  const span = h("span", { class: "todo-count", id: "todo-count" }, [strong]);
+  const liComplete = h("li", {}, [completedList]);
+  const liActive = h("li", {}, [activeList]);
+  const liAll = h("li", {}, [allList]);
+
+  const ul2 = h("ul", { class: "filters" }, [liAll, liActive, liComplete]);
+  const strong = h(
+    "strong",
+    {},
+    `${itemsLeft.length} item${itemsLeft.length !== 1 ? "s" : ""} left`
+  );
+  const span = h("span", { class: "todo-count", id: "count" }, [strong]);
   const footer = h(
     "footer",
-    { class: "footer", id: "footer", style: "display:none" },
+    { class: "footer", id: "footer", style: displayState },
     [span, ul2, button]
   );
 
@@ -95,14 +319,21 @@ function initView(model) {
   const label = h("label", { for: "toggle-all" }, "Mark all as complete");
   const input2 = h(
     "input",
-    { id: "toggle-all", type: "checkbox", class: "toggle-all" },
+    {
+      id: "toggle-all",
+      type: "checkbox",
+      class: "toggle-all",
+      onClick: () => {
+        toggleAllTodos();
+      },
+    },
     []
   );
-  const main = h(
-    "main",
-    { id: "main", class: "main", style: "display:block" },
-    [input2, label, ul]
-  );
+  const main = h("main", { id: "main", class: "main", style: displayState }, [
+    input2,
+    label,
+    ul,
+  ]);
 
   // Header block
   const input = h(
@@ -126,21 +357,4 @@ function initView(model) {
   return mainApp;
 }
 
-
-
-
 mount(mainApp, app);
-
-
-
-    // const oldTodoList = h("ul", { class: "todo-list" }, []);
-    // //const foobar = document.getElementById("todo-list")
-
-    // const todoItems = newState.map(todo => todoListItem(todo.text)); // Generate todo list items based on state
-    // // console.log(todoItems)
-
-    // // //const newTodoList = h("ul", { class: "todo-list" }, todoItems); // Create new todo list with updated items
-    // // const newTodoList = h("ul", { class: "todo-list" }, "weird text"); // Create new todo list with updated items
-    // let newVDOM = initView(newState)
-    // patch(mainApp, newVDOM); // Patch the new todo list onto the DOM
-    // mainApp = newVDOM

@@ -32,13 +32,17 @@ export function mount(vnode, container) {
 
   // Set properties & event listeners
   for (const key in vnode.props) {
+
     if (key.startsWith("on")) {
-      // Handle event listeners
-      // key = onClick
-      // key.slice(2).toLowerCase = click
-      // vnode.props[key] = function
       el.addEventListener(key.slice(2).toLowerCase(), vnode.props[key]);
     } else {
+      if (key === "checked") {
+        if (vnode.props[key] === true) {
+          el.setAttribute(key, vnode.props[key]);
+        } else {
+          continue
+        }
+      }
       el.setAttribute(key, vnode.props[key]);
     }
   }
@@ -66,12 +70,17 @@ export function unmount(vnode) {
 
 // Take 2 virtual nodes, compare & figure out what's the difference
 export function patch(n1, n2) {
-  console.log("Patch n1", n1);
-  console.log("Patch n2", n2);
+
   const el = (n2.el = n1.el);
 
   // Case where the nodes are of different tags
   if (n1.tag !== n2.tag) {
+    mount(n2, el.parentNode);
+    unmount(n1);
+  }
+
+  // Workaround if props has changed
+  if ( n1.props !== n2.props ) {
     mount(n2, el.parentNode);
     unmount(n1);
   }
@@ -114,7 +123,6 @@ export function patch(n1, n2) {
         // Add the newly added children
         else if (c2.length > c1.length) {
           c2.slice(c1.length).forEach((child) => {
-              console.log("---", child, el)
             mount(child, el);
           });
         }
@@ -122,3 +130,5 @@ export function patch(n1, n2) {
     }
   }
 }
+
+

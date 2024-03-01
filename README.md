@@ -29,6 +29,7 @@ npm i
 ```
 
 2. Run dev server
+
 ```bash
 npm run dev
 ```
@@ -36,7 +37,6 @@ npm run dev
 ### 🌐 Online
 
 1. Go to [website](https://master--sprightly-churros-f27bdd.netlify.app/)
-
 
 ## 🧪 Testing the program
 
@@ -47,17 +47,16 @@ Audit can be found [here](https://github.com/01-edu/public/tree/master/subjects/
 > JavaScript is almost a perfect language, but it lacks a good framework. The following framework implementation hopes to solve that issue.
 
 Features:
+
 - 🤯 gamechanging
 - 🔥 blazingly fast
 - 🌐 open source
 - 🔬 research driven
 - 📚 great documentation
 
+Documentation can be found [here](./framework/README.md)
 
 ## 🤴 Authors
 
 @Brooklyn_95 \
 @GhanBuriGhan
-
-
-

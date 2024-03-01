@@ -373,10 +373,19 @@ function render(model) {
     { class: "todo-list", id: "todo-list" },
     todoItems
   );
+
+  const main = createElement(
+    "main",
+    { id: "main", class: "main", style: displayState },
+    [ul]
+  );
+
+  // Header block
+
   const label = createElement(
     "label",
-    { for: "toggle-all" },
-    "Mark all as complete"
+    { class: "toggle-all-label", for: "toggle-all" },
+    "Mark as completed"
   );
   const input2 = createElement(
     "input",
@@ -390,13 +399,17 @@ function render(model) {
     },
     []
   );
-  const main = createElement(
-    "main",
-    { id: "main", class: "main", style: displayState },
-    [input2, label, ul]
+  const toggleDiv = createElement("div", { class: "toggle-all-container" }, [
+    input2,
+    label,
+  ]);
+
+  const inputLabel = createElement(
+    "label",
+    { class: "visually-hidden" },
+    "New Todo Input"
   );
 
-  // Header block
   const input = createElement(
     "input",
     {
@@ -410,8 +423,16 @@ function render(model) {
     },
     []
   );
+  const inputDiv = createElement("div", { class: "input-container" }, [
+    input,
+    inputLabel,
+  ]);
   const h1 = createElement("h1", {}, "todos");
-  const header = createElement("header", { class: "header" }, [h1, input]);
+  const header = createElement(
+    "header",
+    { class: "header" },
+    todos.length > 0 ? [h1, inputDiv, toggleDiv] : [h1, inputDiv]
+  );
 
   const mainApp = createElement("section", { class: "todoapp" }, [
     header,

@@ -36,7 +36,7 @@ npm run dev
 
 ### 🌐 Online
 
-1. Go to [website](https://master--sprightly-churros-f27bdd.netlify.app/)
+1. Go to [website](https://mini-framework-pi.vercel.app/)
 
 ## 🧪 Testing the program
 

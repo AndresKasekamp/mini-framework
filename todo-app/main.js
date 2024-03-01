@@ -1,43 +1,17 @@
-// TODO local storagesse luua, modulariseerida ja uue TODO lisamisel autofocus tagasi panna
-
 import { createElement, mount, diff } from "../framework/VirtualDom.js";
-
-import { State } from "../framework/StateManager.js";
+import { model } from "./state.js";
+import {
+  addTodo,
+  clearCompleted,
+  toggleAllTodos,
+  filterTodos,
+} from "./actions.js";
+import { todoListItem } from "./components.js";
 
 import { Router } from "../framework/RouteManagement.js";
 
-import { areAllValuesEqual } from "./helpers.js";
-
-// App from main HTML file
+// Main div from HTML, starting point
 const app = document.getElementById("app");
-
-// Initialize State manager
-const model = new State({
-  todos: [],
-  filter: "all",
-});
-
-const filterTodos = (path) => {
-  console.log("Filter will be applied");
-
-  let newFilter;
-  switch (path) {
-    case "all":
-      newFilter = "all";
-      break;
-    case "active":
-      newFilter = "active";
-      break;
-    case "completed":
-      newFilter = "completed";
-      break;
-    default:
-      console.error("Unknown filter:", e.target.id);
-      return;
-  }
-
-  model.setState({ ...model.state, filter: newFilter });
-};
 
 // Predefined routes
 const routes = {
@@ -60,215 +34,16 @@ const router = new Router(routes);
 
 let mainApp = render(model);
 
-// Function to add a new todo
-const addTodo = (e) => {
-  if (e.key === "Enter") {
-    const { todos } = model.state;
-
-    const newTodo = {
-      id: Math.random(),
-      text: e.target.value.trim(),
-      completed: false,
-      edit: false,
-    };
-    e.target.value = "";
-
-    model.setState({ ...model.state, todos: [...todos, newTodo] });
-  } else if (e.key === "Escape") {
-    e.target.value = "";
-  }
-};
-
-// Removing single todo from todo arrau
-const removeTodo = (id) => {
-  // Filtering todos
-  const { todos } = model.state;
-  const todoRemoved = todos.filter((item) => item.id !== id);
-  model.setState({ ...model.state, todos: todoRemoved });
-};
-
-// Toggle single todo item to mark it as completed or vice versa
-const toggleTodo = (id) => {
-  const { todos } = model.state;
-
-  const newTodos = todos.map((todo) =>
-    todo.id === id ? { ...todo, completed: !todo.completed } : todo
-  );
-
-  model.setState({ ...model.state, todos: newTodos });
-};
-
-// Clearing completed todos
-const clearCompleted = () => {
-  const { todos } = model.state;
-
-  const newTodos = todos.filter((item) => !item.completed);
-  model.setState({ ...model.state, todos: newTodos });
-};
-
-// Toggle all todos,
-const toggleAllTodos = () => {
-  const { todos } = model.state;
-
-  let newTodos;
-  if (areAllValuesEqual(todos, "completed")) {
-    newTodos = todos.map((item) => {
-      return {
-        ...item,
-        completed: !item.completed,
-      };
-    });
-    //model.setState({ ...model.state, todos: newTodos });
-  } else {
-    newTodos = todos.map((item) => {
-      return {
-        ...item,
-        completed: true,
-      };
-    });
-  }
-
-  model.setState({ ...model.state, todos: newTodos });
-};
-
-// Enabling todo edit
-const enableTodoEdit = (todo) => {
-  const { todos } = model.state;
-
-  const newTodos = todos.map((item) => {
-    if (item.id === todo.id) {
-      return {
-        ...item,
-        edit: !item.edit,
-      };
-    }
-    return item;
-  });
-  model.setState({ ...model.state, todos: newTodos });
-};
-
-// Editing todo
-const editTodo = (e, todo) => {
-  const { todos } = model.state;
-
-  if (e.key === "Enter") {
-    let newTodos = todos.map((item) => {
-      if (item.id === todo.id) {
-        return {
-          ...item,
-          text: e.target.value.trim(),
-          edit: !item.edit,
-        };
-      }
-      return item;
-    });
-
-    // Filtering is use set the value empty string
-    newTodos = newTodos.filter((item) => {
-      if (item.id === todo.id && item.text === "") {
-        return false;
-      }
-      return true;
-    });
-
-    model.setState({ ...model.state, todos: newTodos });
-  } else if (e.key === "Escape") {
-    const newTodos = todos.map((item) => {
-      if (item.id === todo.id) {
-        return {
-          ...item,
-          text: todo.text,
-          edit: !item.edit,
-        };
-      }
-      return item;
-    });
-
-    model.setState({ ...model.state, todos: newTodos });
-  }
-};
-
+// Updating logic for the app
 model.updateState(() => {
-  const newVDOM = render(model); // Generate new virtual DOM based on updated state
-  diff(mainApp, newVDOM); // Patch the new virtual DOM onto the existing one
-  mainApp = newVDOM; // Update mainApp reference to the new virtual DOM
+  const newVDOM = render(model);
+  diff(mainApp, newVDOM);
+  mainApp = newVDOM;
 });
 
-const todoListItem = (todo) => {
-  let displayState;
-  let editInput = null;
-  if (todo.edit) {
-    displayState = "editing";
-    // Creating edit input
-    editInput = createElement(
-      "input",
-      {
-        value: todo.text,
-        class: "edit",
-        id: todo.id,
-        autofocus: true,
-        onkeydown: (e) => {
-          editTodo(e, todo);
-        },
-        placeholder: todo.text,
-      },
-      []
-    );
-  } else {
-    displayState = todo.completed ? "completed" : "";
-  }
-
-  const destroyButton = createElement(
-    "button",
-    {
-      class: "destroy",
-      onClick: () => {
-        removeTodo(todo.id);
-      },
-    },
-    []
-  );
-  const todoLabel = createElement(
-    "label",
-    {
-      ondblclick: () => {
-        enableTodoEdit(todo);
-      },
-    },
-    todo.text
-  );
-  const input3 = createElement(
-    "input",
-    {
-      class: "toggle",
-      type: "checkbox",
-      checked: todo.completed,
-      onClick: () => {
-        toggleTodo(todo.id);
-      },
-    },
-    []
-  );
-  const div = createElement("div", { class: "view" }, [
-    input3,
-    todoLabel,
-    destroyButton,
-  ]);
-
-  const li = createElement(
-    "li",
-    { "data-id": todo.id, id: todo.id, class: displayState },
-    editInput === null ? [div] : [div, editInput]
-  );
-
-  return li;
-};
-
-// TODO modulariseeri välja komponendid, mis pole stateful
-
 // Main rendering logic
-function render(model) {
-  const { todos, filter } = model.state;
+function render(dependency) {
+  const { todos, filter } = dependency.state;
 
   // route checker
   router.checkRoute();

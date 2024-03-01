@@ -1,159 +1,160 @@
 /**
- * Fastest way to remove element, DOM mutation
- * @param  {Element} node empyting the contents of the following DOM node
+ * Creates a new DOM element.
+ *
+ * @param {string} tag The HTML tag name of the element (e.g., "div", "button", "input").
+ * @param {Object.<string, any>} [props] Optional object containing attributes, props, and events for the element.
+ * @param {Array<Element|string>} [children] Optional array containing child elements or content strings.
+ * @returns {Element} The newly created DOM element.
+ *
  * @example
- * const node = document.getElementById('app'); // selecting the node
- * clearNode(node);
+ * const header = createElement("header", { class: "header" }, [h1, input]);
  */
-function clearNode(node) {
-  while (node.lastChild) {
-    node.removeChild(node.lastChild);
-  }
+export function createElement(tag, props, children) {
+  // Return the virtual node
+  return {
+    tag,
+    props,
+    children,
+  };
 }
 
 /**
- * Mount ROOT DOM element
- * @param {Object} model store of the application's state, e.g todo state
- * @param {Function} patch how the application state is updated/patched ("controller")
- * @param {Function} view rendering with the model
- * @param {HTMLElement} rootDiv root DOM element in which the app is mounted, e.g app
- * @param {Function} subscriptions any event listeners the application needs
- */
-export function mount(model, patch, view, rootDiv, subscriptions) {
-  const localStorageStore = "todo-app-mvc"; // 
-
-  /**
-   * Renders the view based on the provided model and signal.
-   * @param {Object} mod - The current model/state of the application.
-   * @param {Function} sig - The signal function used for handling actions.
-   * @param {HTMLElement} root - The root DOM element where the view will be rendered.
-   */
-  function render(mod, sig, root) {
-    localStorage.setItem(localStorageStore, JSON.stringify(mod)); // saving the state of the model to local storage
-    clearNode(root); // clear root element (container) before (re)rendering
-    // Rendering new view based on model and signal given
-    const newView = view(mod, sig)
-    root.appendChild(newView); 
-  }
-
-  /**
-   * Handles actions by updating the model and triggering a re-render.
-   * @param {String} action - The action to be performed, for example EDIT, TOGGLE, DELETE
-   * @param {*} data - Additional data needed for the action.
-   * @param {Object} model - The current model/state of the application.
-   * @returns {Function} - A callback function that updates the model and triggers a re-render.
-   */
-  function signal(action, data, model) {
-    // signal function takes action
-    return () => {
-      // and returns callback
-      model = JSON.parse(localStorage.getItem(localStorageStore)); //|| model;
-      const updatedModel = patch(action, model, data); // update model for action
-      render(updatedModel, signal, rootDiv);
-    };
-  }
-
-  model = JSON.parse(localStorage.getItem(localStorageStore)) || model;
-  render(model, signal, rootDiv);
-  // Subscriptions handling
-  if (subscriptions && typeof subscriptions === "function") {
-    subscriptions(signal);
-  }
-}
-
-/**
- * addProps applies the desired attribute(s) to the specified DOM node, mutates DOM noode
- * @param {Array.<String>/<Function>} props list of attributes to be applied (borh string and function are accepted)
- * @param {Object} node DOM node upon which attribute(s) should be applied
+ * Mounts a Virtual DOM element, manipulating the actual DOM.
+ * @param {Element} vnode - The Virtual DOM element to be mounted.
+ * @param {HTMLElement} container - The parent container element where the Virtual DOM will be mounted.
  * @example
- * input = addProps(["type=checkbox", "id=todo1", "checked=true"], input);
+ * // Mount a Virtual DOM element 'n2' to its parent container element
+ * mount(n2, el.parentNode);
  */
-function addProps(props, node) {
-  if (props && Array.isArray(props) && props.length > 0) {
+export function mount(vnode, container) {
+  // Create the element
+  const el = document.createElement(vnode.tag);
 
-    props.forEach( (attr) => {
-      // onclick and action handler
-      if (typeof attr === "function") {
-        node.onclick = attr;
-        return node;
+  // Set properties & event listeners
+  for (const key in vnode.props) {
+    if (key.startsWith("on")) {
+      el.addEventListener(key.slice(2).toLowerCase(), vnode.props[key]);
+    } else {
+      if (key === "checked") {
+        if (vnode.props[key] === true) {
+          el.setAttribute(key, vnode.props[key]);
+        } else {
+          continue;
+        }
       }
-      // apply any attributes that are *not* functions (i.e. Strings):
-      const a = attr.split("=");
-      switch (a[0]) {
-        case "autofocus":
-          node.autofocus = "autofocus";
-          node.focus();
-          setTimeout(function () {
-            // wait till DOM has rendered then focus()
-            node.focus();
-          }, 200);
-          break;
-        case "checked":
-          node.setAttribute("checked", true);
-        case "class":
-          node.className = a[1]; // apply one or more CSS classes
-          break;
-        case "data-id":
-          node.setAttribute("data-id", a[1]); // add data-id e.g: to <li>
-          break;
-        case "for":
-          node.setAttribute("for", a[1]); // e.g: <label for="toggle-all">
-          break;
-        case "href":
-          node.href = a[1]; // e.g: <a href="#/active">Active</a>
-          break;
-        case "id":
-          node.id = a[1]; // apply element id e.g: <input id="toggle-all">
-          break;
-        case "placeholder":
-          node.placeholder = a[1]; // add placeholder to <input> element
-          break;
-        case "style":
-          node.setAttribute("style", a[1]); // <div style="display: block;">
-          break;
-        case "type":
-          node.setAttribute("type", a[1]); // <input id="go" type="checkbox">
-          break;
-        case "value":
-          node.value = a[1];
-        default:
-          break;
-      }
+      el.setAttribute(key, vnode.props[key]);
+    }
+  }
+
+  // Handle children
+  if (typeof vnode.children === "string") {
+    el.textContent = vnode.children;
+  } else {
+    vnode.children.forEach((child) => {
+      mount(child, el);
     });
   }
-  return node;
+
+  vnode.el = el;
+
+  // Mount to the DOM
+  container.appendChild(el);
 }
 
 /**
- * Adding children to parent
- * @param  {Array.<Object>} childnodes array of child DOM nodes.
- * @param  {Object} parent the "parent" DOM node where children will be added.
- * @return {Object} returns parent DOM node with appended children
+ * Removes a DOM node from the document tree, effectively unmounting it.
+ *
+ * This function directly manipulates the DOM and should be used with caution. 
+ * Consider using framework-specific methods for component unmounting whenever possible.
+ *
+ * @param {Node} node The DOM node to be removed.
+ *
  * @example
- * // returns the parent node with the "children" appended
- * const parent = elmish.addChildNodes([div, p, section], parent);
+ * unmount(n1);
  */
-function addChildNodes(childnodes, parent) {
-  if (Array.isArray(childnodes) && childnodes.length > 0) {
-    childnodes.forEach((el) => parent.appendChild(el));
-  }
-  return parent;
+export function unmount(vnode) {
+  vnode.el.parentNode.removeChild(vnode.el);
 }
 
 /**
- * createElement for creating new elements
- * @param {String} type of element to be created e.g: 'div', 'section'
- * @param {Array.<String>} proplist list of attributes to be applied to the node
- * @param {Array.<Object>} childnodes array of child DOM nodes.
- * @return {Object} returns the <section> DOM node with appended children
+ * Compares two virtual DOM nodes and efficiently updates the DOM to reflect the changes.
+ *
+ * This function handles cases where:
+ * - Nodes have different tags, requiring replacement.
+ * - Nodes have the same tag but different props, requiring full replacement.
+ * - Nodes have the same tag and props:
+   - If new node has string children, update the existing element's text content.
+   - If both nodes have array children:
+     - Patch children that are present in both nodes using recursion.
+     - Remove extra children from the old node.
+     - Append new children from the new node.
+ *
+ * **Important:** This function directly manipulates the DOM and should be used with caution.
+ * Consider using framework-specific methods for efficiently updating views whenever possible.
+ *
+ * @param {Node} firstNode The first virtual DOM node (old node).
+ * @param {Node} secondNode The second virtual DOM node (new node).
+ *
+ * @example
+ * diff(c1[i], c2[i]);
  */
-export function createElement(type, proplist, childnodes) {
-  return addChildNodes(
-    childnodes,
-    addProps(proplist, document.createElement(type))
-  );
+export function diff(firstNode, secondNode) {
+  const el = (secondNode.el = firstNode.el);
+
+  // Case where the nodes are of different tags
+  if (firstNode.tag !== secondNode.tag) {
+    mount(secondNode, el.parentNode);
+    unmount(firstNode);
+  }
+
+  // Workaround if props have changed
+  if (firstNode.props !== secondNode.props) {
+    mount(secondNode, el.parentNode);
+    unmount(firstNode);
+  }
+
+  // Case where the nodes are of the same tag
+  else {
+    // New virtual node has string children
+    if (typeof secondNode.children === "string") {
+      el.textContent = secondNode.children;
+    }
+
+    // New virtual node has array children
+    else {
+      // Old virtual node has string children
+      if (typeof firstNode.children === "string") {
+        el.textContent = "";
+        secondNode.children.forEach((child) => mount(child, el));
+      }
+
+      // Case where the new vnode has string children
+      else {
+        const c1 = firstNode.children;
+        const c2 = secondNode.children;
+        const commonLength = Math.min(c1.length, c2.length);
+
+        // Patch the children both nodes have in common
+        for (let i = 0; i < commonLength; i++) {
+          diff(c1[i], c2[i]);
+        }
+
+        // Old children was longer
+        // Remove the children that are not "there" anymore
+        if (c1.length > c2.length) {
+          c1.slice(c2.length).forEach((child) => {
+            unmount(child);
+          });
+        }
+
+        // Old children was shorter
+        // Add the newly added children
+        else if (c2.length > c1.length) {
+          c2.slice(c1.length).forEach((child) => {
+            mount(child, el);
+          });
+        }
+      }
+    }
+  }
 }
-
-
-
-

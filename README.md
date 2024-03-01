@@ -44,44 +44,18 @@ Audit can be found [here](https://github.com/01-edu/public/tree/master/subjects/
 
 ## Documentation
 
-JavaScript is almost a perfect language, but it lacks a good framework. The following framework implementation hopes to solve that issue. \
+> JavaScript is almost a perfect language, but it lacks a good framework. The following framework implementation hopes to solve that issue.
+
 Features:
 - 🤯 gamechanging
 - 🔥 blazingly fast
 - 🌐 open source
-
-Creating a new element. Set the properties in the list, and optionally add the child elements.
-```javascript
-const div = createElement('div', ["class=todoapp"], [h1, input]);
-```
-
-Creating a new event. Signal based system. Signal is attached to the subscription. For example, toggling an item:
-```javascript
-typeof signal === "function" ? signal("TOGGLE", item.id)
-```
-
-Nest elements. Explained in creating a new element, framework will recursively create each element:
-```javascript
-const div = createElement('div', ["class=todoapp"], [h1, input]);
-```
-
-
-Adding attributes to an element
-```javascript
-const div = createElement('div', [
-              item.done ? "checked=true" : "",
-              "class=toggle",
-              "type=checkbox",
-              typeof signal === "function" ? signal("TOGGLE", item.id) : "",
-            ], null);
-```
+- 🔬 research driven
 
 
 ## 🤴 Authors
 
 @Brooklyn_95 \
-@kretesaak \
-@margus.aid \
 @GhanBuriGhan
 
 

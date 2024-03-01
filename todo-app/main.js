@@ -39,6 +39,7 @@ model.updateState(() => {
   const newVDOM = render(model);
   diff(mainApp, newVDOM);
   mainApp = newVDOM;
+  document.getElementById('new-todo').focus();
 });
 
 // Main rendering logic

@@ -12,8 +12,9 @@ export const addTodo = (e) => {
       edit: false,
     };
     e.target.value = "";
-
+    
     model.setState({ ...model.state, todos: [...todos, newTodo] });
+
   } else if (e.key === "Escape") {
     e.target.value = "";
   }

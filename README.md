@@ -51,6 +51,7 @@ Features:
 - 🔥 blazingly fast
 - 🌐 open source
 - 🔬 research driven
+- 📚 great documentation
 
 
 ## 🤴 Authors

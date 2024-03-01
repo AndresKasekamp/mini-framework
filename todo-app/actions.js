@@ -3,17 +3,19 @@ import { areAllValuesEqual } from "./helpers.js";
 
 export const addTodo = (e) => {
   if (e.key === "Enter") {
-    const { todos } = model.state;
+    if (e.target.value !== "") {
+      const { todos } = model.state;
 
-    const newTodo = {
-      id: Math.random(),
-      text: e.target.value.trim(),
-      completed: false,
-      edit: false,
-    };
-    e.target.value = "";
-    
-    model.setState({ ...model.state, todos: [...todos, newTodo] });
+      const newTodo = {
+        id: Math.random(),
+        text: e.target.value.trim(),
+        completed: false,
+        edit: false,
+      };
+      e.target.value = "";
+      
+      model.setState({ ...model.state, todos: [...todos, newTodo] });
+    }
 
   } else if (e.key === "Escape") {
     e.target.value = "";
@@ -58,7 +60,6 @@ export const toggleAllTodos = () => {
         completed: !item.completed,
       };
     });
-    //model.setState({ ...model.state, todos: newTodos });
   } else {
     newTodos = todos.map((item) => {
       return {

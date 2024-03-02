@@ -13,16 +13,14 @@ import { Router } from "../framework/RouteManagement.js";
 // Main div from HTML, starting point
 const app = document.getElementById("app");
 
-
 const routes = [
   { path: "#/", callback: () => filterTodos("all") },
   { path: "#/active", callback: () => filterTodos("active") },
   { path: "#/completed", callback: () => filterTodos("completed") },
 ];
 
-
 // Route manager init
-const router = new Router(routes);
+const router = new Router(routes, "#/");
 
 let mainApp = render(model);
 
@@ -31,7 +29,7 @@ model.updateState(() => {
   const newVDOM = render(model);
   diff(mainApp, newVDOM);
   mainApp = newVDOM;
-  document.getElementById('new-todo').focus();
+  document.getElementById("new-todo").focus();
 });
 
 // Main rendering logic

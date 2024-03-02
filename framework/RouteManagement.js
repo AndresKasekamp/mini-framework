@@ -9,12 +9,14 @@ export class Router {
 
   // Getting the page's current url from hash
   _getCurrentURL() {
+    console.log("Current url hash", window.location.hash)
     return window.location.hash;
   }
 
   // Matching URL to routes
   _matchUrlToRoute(urlSegs) {
     const matchedRoute = this.routes.find((route) => route.path === urlSegs);
+    console.log("Matched route", matchedRoute)
     return matchedRoute;
   }
 

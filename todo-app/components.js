@@ -1,5 +1,7 @@
 import { removeTodo, toggleTodo, editTodo, enableTodoEdit } from "./actions.js";
-import { createElement } from "../framework/VirtualDom.js";
+// import { createElement } from "../framework/VirtualDom.js";
+
+import createElement from "../framework/VirtualDom2/createElement";
 
 export const todoListItem = (todo) => {
   let displayState;
@@ -42,18 +44,26 @@ export const todoListItem = (todo) => {
         enableTodoEdit(todo);
       },
     },
-    todo.text
+    [todo.text]
   );
   const input3 = createElement(
     "input",
-    {
-      class: "toggle",
-      type: "checkbox",
-      checked: todo.completed,
-      onClick: () => {
-        toggleTodo(todo.id);
-      },
-    },
+    todo.completed
+      ? {
+          class: "toggle",
+          type: "checkbox",
+          checked: todo.completed,
+          onClick: () => {
+            toggleTodo(todo.id);
+          },
+        }
+      : {
+          class: "toggle",
+          type: "checkbox",
+          onClick: () => {
+            toggleTodo(todo.id);
+          },
+        },
     []
   );
   const div = createElement("div", { class: "view" }, [

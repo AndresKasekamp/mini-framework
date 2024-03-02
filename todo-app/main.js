@@ -1,4 +1,4 @@
-import { createElement, mount, diff } from "../framework/VirtualDom.js";
+// import { createElement, mount, diff } from "../framework/VirtualDom.js";
 import { model } from "./state.js";
 import {
   addTodo,
@@ -7,6 +7,11 @@ import {
   filterTodos,
 } from "./actions.js";
 import { todoListItem } from "./components.js";
+
+import createElement from '../framework/VirtualDom2/createElement';
+import render from '../framework/VirtualDom2/render';
+import mount from '../framework/VirtualDom2/mount';
+import diff from '../framework/VirtualDom2/diff';
 
 import { Router } from "../framework/RouteManagement.js";
 
@@ -22,19 +27,15 @@ const routes = [
 // Route manager init
 const router = new Router(routes, "#/");
 
-let mainApp = render(model);
+let vApp = initRender(model);
+const $app = render(vApp);
 
-// Updating logic for the app
-model.updateState(() => {
-  const newVDOM = render(model);
-  diff(mainApp, newVDOM);
-  mainApp = newVDOM;
-  document.getElementById("new-todo").focus();
-});
+
 
 // Main rendering logic
-function render(dependency) {
+function initRender(dependency) {
   const { todos, filter } = dependency.state;
+
 
   let todoItems;
 
@@ -56,8 +57,10 @@ function render(dependency) {
   const span2 = createElement(
     "span",
     { id: "completed-count" },
-    itemsComplete.length == 0 ? "" : `Clear completed [${itemsComplete.length}]`
+    [itemsComplete.length == 0 ? "" : `Clear completed [${itemsComplete.length}]`]
   );
+
+
   const button = createElement(
     "button",
     {
@@ -77,7 +80,7 @@ function render(dependency) {
       id: "completed",
       class: filter === "completed" ? "selected" : "",
     },
-    "Completed"
+    ["Completed"]
   );
   const activeList = createElement(
     "a",
@@ -86,7 +89,7 @@ function render(dependency) {
       id: "active",
       class: filter === "active" ? "selected" : "",
     },
-    "Active"
+   [ "Active"]
   );
   const allList = createElement(
     "a",
@@ -95,7 +98,7 @@ function render(dependency) {
       id: "all",
       class: filter === "all" ? "selected" : "",
     },
-    "All"
+    ["All"]
   );
 
   const liComplete = createElement("li", {}, [completedList]);
@@ -110,7 +113,7 @@ function render(dependency) {
   const strong = createElement(
     "strong",
     {},
-    `${itemsLeft.length} item${itemsLeft.length !== 1 ? "s" : ""} left`
+    [`${itemsLeft.length} item${itemsLeft.length !== 1 ? "s" : ""} left`]
   );
   const span = createElement("span", { class: "todo-count", id: "count" }, [
     strong,
@@ -139,7 +142,7 @@ function render(dependency) {
   const label = createElement(
     "label",
     { class: "toggle-all-label", for: "toggle-all" },
-    "Mark as completed"
+    ["Mark as completed"]
   );
   const input2 = createElement(
     "input",
@@ -161,7 +164,7 @@ function render(dependency) {
   const inputLabel = createElement(
     "label",
     { class: "visually-hidden" },
-    "New Todo Input"
+    ["New Todo Input"]
   );
 
   const input = createElement(
@@ -181,7 +184,7 @@ function render(dependency) {
     input,
     inputLabel,
   ]);
-  const h1 = createElement("h1", {}, "todos");
+  const h1 = createElement("h1", {}, ["todos"]);
   const header = createElement(
     "header",
     { class: "header" },
@@ -194,8 +197,24 @@ function render(dependency) {
     footer,
   ]);
 
+
+
   return mainApp;
 }
 
+
+let $rootEl = mount($app, document.getElementById('app'));
 // Starting mounting point
-mount(mainApp, app);
+//mount(mainApp, app);
+
+// Updating logic for the app
+model.updateState(() => {
+  const vNewApp = initRender(model);
+  const patch = diff(vApp, vNewApp);
+  $rootEl = patch($rootEl);
+  vApp = vNewApp;
+  // const newVDOM = render(model);
+  // diff(vApp, newVDOM);
+  // vApp = newVDOM;
+  //document.getElementById("new-todo").focus();
+});

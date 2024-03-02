@@ -1,6 +1,6 @@
 # Documentation
 
-This framework utilizes a Virtual DOM, custom Route and State managers. Events are managed by in the virtual DOM. Framework is not opinionated on how you re-render your application, improvement from client-side can be achieved by modularzing the application based on the parts that need to be re-rendered and which do not.
+This framework leverages a Virtual DOM alongside custom Route and State managers to streamline application development. Event handling is seamlessly integrated within the Virtual DOM. The framework maintains flexibility, allowing developers to choose how to re-render their applications. Enhancements on the client-side are facilitated by modularizing the application, pinpointing areas requiring re-rendering and those that do not.
 
 Creating a new element. Set the properties in the list, and optionally add the child elements. The child elements can be other elements or a text.
 

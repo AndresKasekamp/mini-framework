@@ -13,23 +13,15 @@ import { Router } from "../framework/RouteManagement.js";
 // Main div from HTML, starting point
 const app = document.getElementById("app");
 
-// Predefined routes
-const routes = {
-  "#/": () => {
-    filterTodos("all");
-  },
-  "#/active": () => {
-    filterTodos("active");
-  },
-  "#/completed": () => {
-    filterTodos("completed");
-  },
-  "*": () => {
-    filterTodos("all");
-  },
-};
 
-// Route manager
+const routes = [
+  { path: "#/", callback: () => filterTodos("all") },
+  { path: "#/active", callback: () => filterTodos("active") },
+  { path: "#/completed", callback: () => filterTodos("completed") },
+];
+
+
+// Route manager init
 const router = new Router(routes);
 
 let mainApp = render(model);
@@ -45,9 +37,6 @@ model.updateState(() => {
 // Main rendering logic
 function render(dependency) {
   const { todos, filter } = dependency.state;
-
-  // route checker
-  router.checkRoute();
 
   let todoItems;
 
@@ -89,9 +78,6 @@ function render(dependency) {
       href: "#/completed",
       id: "completed",
       class: filter === "completed" ? "selected" : "",
-      onClick: (e) => {
-        filterTodos(e.target.id);
-      },
     },
     "Completed"
   );
@@ -101,9 +87,6 @@ function render(dependency) {
       href: "#/active",
       id: "active",
       class: filter === "active" ? "selected" : "",
-      onClick: (e) => {
-        filterTodos(e.target.id);
-      },
     },
     "Active"
   );
@@ -113,9 +96,6 @@ function render(dependency) {
       href: "#/",
       id: "all",
       class: filter === "all" ? "selected" : "",
-      onClick: (e) => {
-        filterTodos(e.target.id);
-      },
     },
     "All"
   );

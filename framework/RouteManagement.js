@@ -1,31 +1,46 @@
-// TODO completed ja active on siin vaja ära lahendada mingi callbackiga?
+
 
 export class Router {
   constructor(routes) {
-    this.routes = routes || {};
-    this.currentRoute = null;
-    window.addEventListener("popstate", () => {
-      this.checkRoute(window.location.pathname);
-    });
-    this.checkRoute(window.location.pathname);
+    this.routes = routes;
+    this._loadInitialRoute();
+    window.addEventListener("hashchange", this._onHashChange.bind(this));
   }
 
-  navigate(path) {
-    window.history.pushState(null, null, path);
-    this.checkRoute(path);
+  // Getting the page's current url from hash
+  _getCurrentURL() {
+    return window.location.hash;
   }
 
-  checkRoute() {
-    const path = window.location.hash;
+  // Matching URL to routes
+  _matchUrlToRoute(urlSegs) {
+    const matchedRoute = this.routes.find((route) => route.path === urlSegs);
+    return matchedRoute;
+  }
 
-    if (this.currentRoute !== path) {
-      const routeHandler = this.routes[path] || this.routes["*"];
-      if (routeHandler) {
-        this.currentRoute = path;
-        routeHandler(); 
-      } else {
-        console.error(`No route found for ${path}`);
-      }
+  // Loading the initial route
+  _loadInitialRoute() {
+    const url = this._getCurrentURL();
+    this.loadRoute(url);
+  }
+
+  // Loading specified route
+  loadRoute(url) {
+    const matchedRoute = this._matchUrlToRoute(url);
+    if (!matchedRoute) {
+      throw new Error("Route not found");
     }
+    matchedRoute.callback();
+  }
+
+  // Navigating to correct path
+  navigateTo(path) {
+    window.location.hash = path;
+  }
+
+  // Listener for hash changes
+  _onHashChange() {
+    const url = this._getCurrentURL();
+    this.loadRoute(url);
   }
 }

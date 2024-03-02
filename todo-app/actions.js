@@ -1,22 +1,23 @@
 import { model } from "./state";
 import { areAllValuesEqual } from "./helpers.js";
 
+let todoId = 0;
 export const addTodo = (e) => {
   if (e.key === "Enter") {
     if (e.target.value !== "") {
+      todoId++;
       const { todos } = model.state;
 
       const newTodo = {
-        id: Math.random(),
+        id: todoId,
         text: e.target.value.trim(),
         completed: false,
         edit: false,
       };
       e.target.value = "";
-      
+
       model.setState({ ...model.state, todos: [...todos, newTodo] });
     }
-
   } else if (e.key === "Escape") {
     e.target.value = "";
   }

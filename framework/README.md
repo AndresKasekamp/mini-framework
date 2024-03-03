@@ -5,7 +5,7 @@ This framework leverages a Virtual DOM alongside custom Route and State managers
 Creating a new element. Set the properties in the list, and optionally add the child elements. The child elements can be other elements or a text.
 
 ```javascript
-const label = createElement("label",{ class: "toggle-all-label", for: "toggle-all" }, "Mark as completed");
+const label = createElement("label",{ class: "toggle-all-label", for: "toggle-all" }, ["Mark as completed"]);
 ```
 
 Creating a new event. Attach the event in the props.:

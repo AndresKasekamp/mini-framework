@@ -9,7 +9,6 @@ export const mount = ($node, $target) => {
   return $node;
 };
 
-
 /**
  * Mounts a DOM node onto another DOM node, replacing the target node.
  * @param {string} $node - The DOM node to be mounted.
@@ -23,7 +22,6 @@ export const createElement = (tagName, attrs = {}, children = []) => {
     children,
   };
 };
-
 
 /**
  * Renders an HTML element.
@@ -187,7 +185,7 @@ export const diff = (vOldNode, vNewNode) => {
     }
   }
 
-  // Taga have changed, complete replacement
+  // Tags have changed, complete replacement
   if (vOldNode.tagName !== vNewNode.tagName) {
     return ($node) => {
       const $newNode = render(vNewNode);
@@ -216,4 +214,3 @@ export const diff = (vOldNode, vNewNode) => {
     return $node;
   };
 };
-

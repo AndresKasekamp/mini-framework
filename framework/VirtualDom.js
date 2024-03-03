@@ -194,6 +194,15 @@ export const diff = (vOldNode, vNewNode) => {
     };
   }
 
+  // Check if IDs are different
+  if (vOldNode.attrs.id !== vNewNode.attrs.id) {
+    return ($node) => {
+      const $newNode = render(vNewNode);
+      $node.replaceWith($newNode);
+      return $newNode;
+    };
+  }
+
   // Checkbox bug workaround
   if (
     vOldNode.attrs["type"] === "checkbox" ||
@@ -206,6 +215,7 @@ export const diff = (vOldNode, vNewNode) => {
     };
   }
 
+
   // Patches with attributes and children
   const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
   const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
@@ -217,3 +227,15 @@ export const diff = (vOldNode, vNewNode) => {
     return $node;
   };
 };
+
+
+  // if (
+  //   (vOldNode.attrs["class"] === "view") ||
+  //   (vNewNode.attrs["class"] === "view")
+  // ) {
+  //   return ($node) => {
+  //     const $newNode = render(vNewNode);
+  //     $node.replaceWith($newNode);
+  //     return $newNode;
+  //   };
+  // }

@@ -1,160 +1,219 @@
 /**
- * Creates a new DOM element.
- *
- * @param {string} tag The HTML tag name of the element (e.g., "div", "button", "input").
- * @param {Object.<string, any>} [props] Optional object containing attributes, props, and events for the element.
- * @param {Array<Element|string>} [children] Optional array containing child elements or content strings.
- * @returns {Element} The newly created DOM element.
- *
- * @example
- * const header = createElement("header", { class: "header" }, [h1, input]);
+ * Mounts a DOM node onto another DOM node, replacing the target node.
+ * @param {Node} $node - The DOM node to be mounted.
+ * @param {Node} $target - The target DOM node to be replaced with $node.
+ * @returns {Node} - The enhanced node that has been mounted.
  */
-export function createElement(tag, props, children) {
-  // Return the virtual node
-  return {
-    tag,
-    props,
-    children,
-  };
-}
+export const mount = ($node, $target) => {
+  $target.replaceWith($node);
+  return $node;
+};
+
 
 /**
- * Mounts a Virtual DOM element, manipulating the actual DOM.
- * @param {Element} vnode - The Virtual DOM element to be mounted.
- * @param {HTMLElement} container - The parent container element where the Virtual DOM will be mounted.
- * @example
- * // Mount a Virtual DOM element 'n2' to its parent container element
- * mount(n2, el.parentNode);
+ * Mounts a DOM node onto another DOM node, replacing the target node.
+ * @param {string} $node - The DOM node to be mounted.
+ * @param {Object} $target - The target DOM node to be replaced with $node.
+ * @param {Array<string|HTMLElement>} children - Array of children nodes or strings.
  */
-export function mount(vnode, container) {
-  // Create the element
-  const el = document.createElement(vnode.tag);
+export const createElement = (tagName, attrs = {}, children = []) => {
+  return {
+    tagName,
+    attrs,
+    children,
+  };
+};
 
-  // Set properties & event listeners
-  for (const key in vnode.props) {
-    if (key.startsWith("on")) {
-      el.addEventListener(key.slice(2).toLowerCase(), vnode.props[key]);
+
+/**
+ * Renders an HTML element.
+ * @param {string} tagName - The tag name of the element, such as "a", "div", or "button".
+ * @param {Object} attrs - Object containing attributes (props) for the element.
+ * @param {Array<string|HTMLElement>} children - Array of children nodes or strings.
+ * @returns {HTMLElement} - The created element.
+ */
+const renderElem = ({ tagName, attrs, children }) => {
+  // Creating an element
+  const $el = document.createElement(tagName);
+
+  // set attributes
+  for (const [k, v] of Object.entries(attrs)) {
+    // Addint events here
+    if (k.startsWith("on")) {
+      $el.addEventListener(k.slice(2).toLowerCase(), v);
     } else {
-      if (key === "checked") {
-        if (vnode.props[key] === true) {
-          el.setAttribute(key, vnode.props[key]);
-        } else {
-          continue;
-        }
-      }
-      el.setAttribute(key, vnode.props[key]);
+      $el.setAttribute(k, v);
     }
   }
 
-  // Handle children
-  if (typeof vnode.children === "string") {
-    el.textContent = vnode.children;
-  } else {
-    vnode.children.forEach((child) => {
-      mount(child, el);
+  // set children
+  for (const child of children) {
+    const $child = render(child);
+    $el.appendChild($child);
+  }
+
+  return $el;
+};
+
+/**
+ * Renders a node.
+ * @param {Node|string} vNode - The node to render.
+ * @returns {HTMLElement|Text} - The rendered element or text node.
+ */
+export const render = (vNode) => {
+  // Easy case for default string
+  if (typeof vNode === "string") {
+    return document.createTextNode(vNode);
+  }
+
+  return renderElem(vNode);
+};
+
+/**
+ * Zips two arrays, akin to Python's zip function, for efficient length comparison.
+ * @param {Array} xs - The first array to zip.
+ * @param {Array} ys - The second array to zip.
+ * @returns {Array} - The zipped representation of the arrays.
+ */
+const zip = (xs, ys) => {
+  const zipped = [];
+  for (let i = 0; i < Math.max(xs.length, ys.length); i++) {
+    zipped.push([xs[i], ys[i]]);
+  }
+  return zipped;
+};
+
+/**
+ * Compares the difference between attributes of old and new nodes.
+ * @param {Object} oldAttrs - The attributes of the old node.
+ * @param {Object} newAttrs - The attributes of the new node.
+ * @returns {Function} - A function to apply the patches to a given node.
+ * @example
+ * // Example of applying attribute patches
+ * const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
+ */
+const diffAttrs = (oldAttrs, newAttrs) => {
+  const patches = []; // storing patches
+
+  // set new attributes
+  for (const [k, v] of Object.entries(newAttrs)) {
+    patches.push(($node) => {
+      $node.setAttribute(k, v);
+      return $node;
     });
   }
 
-  vnode.el = el;
-
-  // Mount to the DOM
-  container.appendChild(el);
-}
-
-/**
- * Removes a DOM node from the document tree, effectively unmounting it.
- *
- * This function directly manipulates the DOM and should be used with caution. 
- * Consider using framework-specific methods for component unmounting whenever possible.
- *
- * @param {Node} node The DOM node to be removed.
- *
- * @example
- * unmount(n1);
- */
-export function unmount(vnode) {
-  vnode.el.parentNode.removeChild(vnode.el);
-}
-
-/**
- * Compares two virtual DOM nodes and efficiently updates the DOM to reflect the changes.
- *
- * This function handles cases where:
- * - Nodes have different tags, requiring replacement.
- * - Nodes have the same tag but different props, requiring full replacement.
- * - Nodes have the same tag and props:
-   - If new node has string children, update the existing element's text content.
-   - If both nodes have array children:
-     - Patch children that are present in both nodes using recursion.
-     - Remove extra children from the old node.
-     - Append new children from the new node.
- *
- * **Important:** This function directly manipulates the DOM and should be used with caution.
- * Consider using framework-specific methods for efficiently updating views whenever possible.
- *
- * @param {Node} firstNode The first virtual DOM node (old node).
- * @param {Node} secondNode The second virtual DOM node (new node).
- *
- * @example
- * diff(c1[i], c2[i]);
- */
-export function diff(firstNode, secondNode) {
-  const el = (secondNode.el = firstNode.el);
-
-  // Case where the nodes are of different tags
-  if (firstNode.tag !== secondNode.tag) {
-    mount(secondNode, el.parentNode);
-    unmount(firstNode);
-  }
-
-  // Workaround if props have changed
-  if (firstNode.props !== secondNode.props) {
-    mount(secondNode, el.parentNode);
-    unmount(firstNode);
-  }
-
-  // Case where the nodes are of the same tag
-  else {
-    // New virtual node has string children
-    if (typeof secondNode.children === "string") {
-      el.textContent = secondNode.children;
-    }
-
-    // New virtual node has array children
-    else {
-      // Old virtual node has string children
-      if (typeof firstNode.children === "string") {
-        el.textContent = "";
-        secondNode.children.forEach((child) => mount(child, el));
-      }
-
-      // Case where the new vnode has string children
-      else {
-        const c1 = firstNode.children;
-        const c2 = secondNode.children;
-        const commonLength = Math.min(c1.length, c2.length);
-
-        // Patch the children both nodes have in common
-        for (let i = 0; i < commonLength; i++) {
-          diff(c1[i], c2[i]);
-        }
-
-        // Old children was longer
-        // Remove the children that are not "there" anymore
-        if (c1.length > c2.length) {
-          c1.slice(c2.length).forEach((child) => {
-            unmount(child);
-          });
-        }
-
-        // Old children was shorter
-        // Add the newly added children
-        else if (c2.length > c1.length) {
-          c2.slice(c1.length).forEach((child) => {
-            mount(child, el);
-          });
-        }
-      }
+  // remove old attributes
+  for (const k in oldAttrs) {
+    if (!(k in newAttrs)) {
+      patches.push(($node) => {
+        $node.removeAttribute(k);
+        return $node;
+      });
     }
   }
-}
+
+  return ($node) => {
+    for (const patch of patches) {
+      patch($node);
+    }
+  };
+};
+
+/**
+ * Compares the difference between the children of old and new nodes.
+ * @param {Array<Node|string>} oldVChildren - The children of the old node.
+ * @param {Array<Node|string>} newVChildren - The children of the new node.
+ * @returns {Function} - A function to apply the patches to the parent node.
+ * @example
+ * // Example of applying child patches
+ * const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+ */
+const diffChildren = (oldVChildren, newVChildren) => {
+  const childPatches = [];
+  oldVChildren.forEach((oldVChild, i) => {
+    childPatches.push(diff(oldVChild, newVChildren[i]));
+  });
+
+  const additionalPatches = [];
+  for (const additionalVChild of newVChildren.slice(oldVChildren.length)) {
+    additionalPatches.push(($node) => {
+      $node.appendChild(render(additionalVChild));
+      return $node;
+    });
+  }
+
+  return ($parent) => {
+    for (const [patch, child] of zip(childPatches, $parent.childNodes)) {
+      patch(child);
+    }
+
+    for (const patch of additionalPatches) {
+      patch($parent);
+    }
+
+    return $parent;
+  };
+};
+
+/**
+ * Compares the difference between children of old and new nodes.
+ * @param {Node} vOldNode - The old node.
+ * @param {Node} vNewNode - The new node.
+ * @returns {Function} - A function to apply the patch.
+ * @example
+ * // Example of applying a patch
+ * const patch = diff(vApp, vNewApp);
+ */
+export const diff = (vOldNode, vNewNode) => {
+  // Complete removal if new node does not exist
+  if (vNewNode === undefined) {
+    return ($node) => {
+      $node.remove();
+      return undefined;
+    };
+  }
+
+  // String type, easy replacement
+  if (typeof vOldNode === "string" || typeof vNewNode === "string") {
+    if (vOldNode !== vNewNode) {
+      return ($node) => {
+        const $newNode = render(vNewNode);
+        $node.replaceWith($newNode);
+        return $newNode;
+      };
+    } else {
+      return ($node) => undefined;
+    }
+  }
+
+  // Taga have changed, complete replacement
+  if (vOldNode.tagName !== vNewNode.tagName) {
+    return ($node) => {
+      const $newNode = render(vNewNode);
+      $node.replaceWith($newNode);
+      return $newNode;
+    };
+  }
+
+  // Checkbox bug workaround
+  if (vNewNode.attrs["type"] === "checkbox") {
+    return ($node) => {
+      const $newNode = render(vNewNode);
+      $node.replaceWith($newNode);
+      return $newNode;
+    };
+  }
+
+  // Patches with attributes and children
+  const patchAttrs = diffAttrs(vOldNode.attrs, vNewNode.attrs);
+  const patchChildren = diffChildren(vOldNode.children, vNewNode.children);
+
+  // Function to apply changes
+  return ($node) => {
+    patchAttrs($node);
+    patchChildren($node);
+    return $node;
+  };
+};
+

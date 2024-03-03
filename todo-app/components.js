@@ -1,7 +1,5 @@
 import { removeTodo, toggleTodo, editTodo, enableTodoEdit } from "./actions.js";
-// import { createElement } from "../framework/VirtualDom.js";
-
-import createElement from "../framework/VirtualDom2/createElement";
+import {  createElement } from "../framework/VirtualDom.js";
 
 export const todoListItem = (todo) => {
   let displayState;

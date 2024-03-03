@@ -1,4 +1,4 @@
-// import { createElement, mount, diff } from "../framework/VirtualDom.js";
+import { render, mount, createElement, diff } from "../framework/VirtualDom.js";
 import { model } from "./state.js";
 import {
   addTodo,
@@ -7,11 +7,6 @@ import {
   filterTodos,
 } from "./actions.js";
 import { todoListItem } from "./components.js";
-
-import createElement from '../framework/VirtualDom2/createElement';
-import render from '../framework/VirtualDom2/render';
-import mount from '../framework/VirtualDom2/mount';
-import diff from '../framework/VirtualDom2/diff';
 
 import { Router } from "../framework/RouteManagement.js";
 
@@ -30,12 +25,9 @@ const router = new Router(routes, "#/");
 let vApp = initRender(model);
 const $app = render(vApp);
 
-
-
 // Main rendering logic
 function initRender(dependency) {
   const { todos, filter } = dependency.state;
-
 
   let todoItems;
 
@@ -54,12 +46,11 @@ function initRender(dependency) {
   const itemsComplete = todos.filter((obj) => obj.completed === true);
 
   // Footer block
-  const span2 = createElement(
-    "span",
-    { id: "completed-count" },
-    [itemsComplete.length == 0 ? "" : `Clear completed [${itemsComplete.length}]`]
-  );
-
+  const span2 = createElement("span", { id: "completed-count" }, [
+    itemsComplete.length == 0
+      ? ""
+      : `Clear completed [${itemsComplete.length}]`,
+  ]);
 
   const button = createElement(
     "button",
@@ -89,7 +80,7 @@ function initRender(dependency) {
       id: "active",
       class: filter === "active" ? "selected" : "",
     },
-   [ "Active"]
+    ["Active"]
   );
   const allList = createElement(
     "a",
@@ -110,11 +101,9 @@ function initRender(dependency) {
     liActive,
     liComplete,
   ]);
-  const strong = createElement(
-    "strong",
-    {},
-    [`${itemsLeft.length} item${itemsLeft.length !== 1 ? "s" : ""} left`]
-  );
+  const strong = createElement("strong", {}, [
+    `${itemsLeft.length} item${itemsLeft.length !== 1 ? "s" : ""} left`,
+  ]);
   const span = createElement("span", { class: "todo-count", id: "count" }, [
     strong,
   ]);
@@ -161,11 +150,9 @@ function initRender(dependency) {
     label,
   ]);
 
-  const inputLabel = createElement(
-    "label",
-    { class: "visually-hidden" },
-    ["New Todo Input"]
-  );
+  const inputLabel = createElement("label", { class: "visually-hidden" }, [
+    "New Todo Input",
+  ]);
 
   const input = createElement(
     "input",
@@ -197,13 +184,10 @@ function initRender(dependency) {
     footer,
   ]);
 
-
-
   return mainApp;
 }
 
-
-let $rootEl = mount($app, document.getElementById('app'));
+let $rootEl = mount($app, document.getElementById("app"));
 // Starting mounting point
 //mount(mainApp, app);
 
@@ -213,8 +197,4 @@ model.updateState(() => {
   const patch = diff(vApp, vNewApp);
   $rootEl = patch($rootEl);
   vApp = vNewApp;
-  // const newVDOM = render(model);
-  // diff(vApp, newVDOM);
-  // vApp = newVDOM;
-  //document.getElementById("new-todo").focus();
 });

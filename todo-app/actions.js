@@ -1,15 +1,14 @@
 import { model } from "./state";
-import { areAllValuesEqual } from "./helpers.js";
+import { areAllValuesEqual, generatorId } from "./helpers.js";
 
-let todoId = 0;
 export const addTodo = (e) => {
   if (e.key === "Enter") {
     if (e.target.value !== "") {
-      todoId++;
+      const uid = generatorId.next();
       const { todos } = model.state;
 
       const newTodo = {
-        id: todoId,
+        id: uid.value,
         text: e.target.value.trim(),
         completed: false,
         edit: false,

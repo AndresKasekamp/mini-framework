@@ -10,7 +10,6 @@ import { todoListItem } from "./components.js";
 
 import { Router } from "../framework/RouteManagement.js";
 
-
 const routes = [
   { path: "#/", callback: () => filterTodos("all") },
   { path: "#/active", callback: () => filterTodos("active") },
@@ -186,7 +185,6 @@ function initRender(dependency) {
 }
 
 let $rootEl = mount($app, document.getElementById("app"));
-
 
 // Updating logic for the app
 model.updateState(() => {

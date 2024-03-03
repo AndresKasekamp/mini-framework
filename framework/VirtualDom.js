@@ -195,7 +195,10 @@ export const diff = (vOldNode, vNewNode) => {
   }
 
   // Checkbox bug workaround
-  if (vNewNode.attrs["type"] === "checkbox") {
+  if (
+    vOldNode.attrs["type"] === "checkbox" ||
+    vNewNode.attrs["type"] === "checkbox"
+  ) {
     return ($node) => {
       const $newNode = render(vNewNode);
       $node.replaceWith($newNode);
